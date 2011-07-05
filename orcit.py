@@ -73,10 +73,16 @@ def parse_arguments():
 
 class irc_client(irclib.SimpleIRCClient):
 
-    def __init__(self, target = None):
+    def __init__(self, input_handle = sys.stdin, remote_nick = None):
         irclib.SimpleIRCClient.__init__(self)
-        self.target = target
+        self.target = remote_nick
         self.logged_in = False
+
+        # make input file handle non-blocking, see 
+        # http://stackoverflow.com/questions/375427/non-blocking-read-on-a-subprocess-pipe-in-python 
+        fd = input_handle.fileno()
+        fl = fcntl.fcntl(fd, fcntl.F_GETFL)
+        fcntl.fcntl(fd, fcntl.F_SETFL, fl | O_NONBLOCK)
 
     def on_welcome(self, connection, event):
         self.logged_in = True
@@ -111,13 +117,6 @@ class irc_client(irclib.SimpleIRCClient):
             time.sleep(loop_sleeping_time)
 
 
-
-def make_stdin_non_blocking():
-    fd = sys.stdin.fileno()
-    fl = fcntl.fcntl(fd, fcntl.F_GETFL)
-    fcntl.fcntl(fd, fcntl.F_SETFL, fl | O_NONBLOCK)
-
-
 def main():
 
     print '### Welcome to %s %s. This software is licenced under %s ###\n###' % (PROGRAM_NAME, PROGRAM_VERSION, PROGRAM_LICENCE) 
@@ -129,9 +128,7 @@ def main():
         print '### FATAL ERROR: I only do private messaging and cannot join channels! ###'
         sys.exit(1)
 
-    make_stdin_non_blocking()
-
-    ic = irc_client(target)
+    ic = irc_client(input_handle = sys.stdin, remote_nick = target)
     try:
         print '### Calling %s:%s ... ###' % (server, port)
         ic.connect(server, port, nick)
