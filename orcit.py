@@ -26,13 +26,13 @@ PROGRAM_AUTHOR  = 'Nils Toedtmann http://nils.toedtmann.net/'
 
 
 import sys
-import time
-import argparse
-from   random import sample
-from   string import ascii_uppercase, ascii_lowercase, digits 
+from   time     import sleep
+from   argparse import ArgumentParser
+from   random   import sample
+from   string   import ascii_uppercase, ascii_lowercase, digits 
 import irclib
-import fcntl
-from   os import O_NONBLOCK
+from   fcntl    import fcntl, F_GETFL, F_SETFL
+from   os       import O_NONBLOCK
 
 DEFAULT_server = 'chat.freenode.net'
 DEFAULT_port   = 6667
@@ -57,7 +57,7 @@ def parse_arguments():
     global nick
     global target
 
-    parser = argparse.ArgumentParser(description='Private messaging through IRC')
+    parser = ArgumentParser(description='Private messaging through IRC')
     parser.add_argument('--irc-server',     type=str, help='IRC server name ["'+str(DEFAULT_server)+'"]')
     parser.add_argument('--irc-port',       type=int, help='IRC server port ["'+str(DEFAULT_port)+'"]')
     parser.add_argument('--nick',           type=str, help='IRC local  nick [random string]')
@@ -81,21 +81,21 @@ class irc_client(irclib.SimpleIRCClient):
         # make input file handle non-blocking, see 
         # http://stackoverflow.com/questions/375427/non-blocking-read-on-a-subprocess-pipe-in-python 
         fd = input_handle.fileno()
-        fl = fcntl.fcntl(fd, fcntl.F_GETFL)
-        fcntl.fcntl(fd, fcntl.F_SETFL, fl | O_NONBLOCK)
+        fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK)
 
     def on_welcome(self, connection, event):
         self.logged_in = True
-        print '### Registered nick "%s, remote nick is "%s" ###' % (nick, target)
-        print '### Remote side could use "%s --nick %s --target %s" to speak to us ###' % (PROGRAM_NAME, target, nick)
-        print '### You can type you message now. Use "%s" to exit. ###\n###'   % (quit_command)
+        print 'registered'
+        print '### Remote nick is  "%s". Remote side could use this command to speak to us: ' % (nick)
+        print '###        %s --nick %s  --target %s \n###' % (PROGRAM_NAME, target, nick)
+        print '### You can type you message now. Use "%s" to exit.\n'   % (quit_command)
 
     def on_disconnect(self, connection, event):
-        print '### Exiting ###'
+        print '### Exiting.'
         sys.exit(0)
 
     def on_privmsg(self, connection, event):
-        print '\n### Received private message: %s ###'  % event.arguments()###
+        print '\n### Received private message: %s'  % event.arguments()###
 
     def readline(self):
         line = ''
@@ -104,35 +104,36 @@ class irc_client(irclib.SimpleIRCClient):
 
         if line :
             if line == quit_command :
-                print '### Received exit command. Cleaning up ... ###'
+                print '### Received exit command. Cleaning up ...'
                 self.connection.quit(quit_message)
             else:
-                print '### Sending private message: ==>%s<== ###' % line 
+                print '### Sending private message: ==>%s<==' % line 
                 self.connection.privmsg(self.target, line)
 
     def loop(self):
         while True :
             self.ircobj.process_once()
             if self.logged_in : self.readline()
-            time.sleep(loop_sleeping_time)
+            sleep(loop_sleeping_time)
 
 
 def main():
 
-    print '### Welcome to %s %s. This software is licenced under %s ###\n###' % (PROGRAM_NAME, PROGRAM_VERSION, PROGRAM_LICENCE) 
+    print '### Welcome to %s %s. This software is licenced under %s\n###' % (PROGRAM_NAME, PROGRAM_VERSION, PROGRAM_LICENCE) 
 
     parse_arguments()
     # print server, port, nick, target
 
     if irclib.is_channel(target):
-        print '### FATAL ERROR: I only do private messaging and cannot join channels! ###'
+        print '### FATAL ERROR: I only do private messaging and cannot join channels!'
         sys.exit(1)
 
     ic = irc_client(input_handle = sys.stdin, remote_nick = target)
     try:
-        print '### Calling %s:%s ... ###' % (server, port)
+        print '### Connecting to %s:%s ...' % (server, port),
         ic.connect(server, port, nick)
-        print '### Connected to %s:%s. Waiting to register nick "%s" ... ###' % (server, port, nick)
+        print 'connected' 
+        print '### Registering nick "%s" ...' % (nick),
     except irclib.ServerConnectionError, IRCErrorMessage:
         print IRCErrorMessage
         sys.exit(1)
