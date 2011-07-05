@@ -19,29 +19,36 @@
 # <http://www.gnu.org/licenses/gpl-2.0.html>
 
 
+PROGRAM_NAME    = 'orcit'
+PROGRAM_VERSION = '0.1'
+PROGRAM_LICENCE = 'GPLv2+'
+PROGRAM_AUTHOR  = 'Nils Toedtmann http://nils.toedtmann.net/'
+
+
 import sys
 import time
 import argparse
-import random
-import string
+from   random import sample
+from   string import ascii_uppercase, ascii_lowercase, digits 
 import irclib
-
+import fcntl
+from   os import O_NONBLOCK
 
 DEFAULT_server = 'chat.freenode.net'
 DEFAULT_port   = 6667
 DEFAULT_target = 'orcittest'
 
 
-quit_command    = '/QUIT'
+quit_command    = 'QUIT'
 quit_message    = 'bye'
 loop_sleeping_time = 1
 
 
-random_string_charset = string.ascii_uppercase + string.ascii_lowercase + string.digits
+random_string_charset = ascii_uppercase + ascii_lowercase + digits
 random_string_length  = 10
 
 def random_string( N=random_string_length ):
-    return ''.join(random.sample(random_string_charset,N))
+    return ''.join(sample(random_string_charset,N))
 
 
 def parse_arguments():
@@ -73,38 +80,60 @@ class irc_client(irclib.SimpleIRCClient):
 
     def on_welcome(self, connection, event):
         self.logged_in = True
-        print '### I am listening. My nick is %s. Press "%s" to leave ###' % (nick, quit_command)
+        print '### Registered nick "%s, remote nick is "%s" ###' % (nick, target)
+        print '### Remote side could use "%s --nick %s --target %s" to speak to us ###' % (PROGRAM_NAME, target, nick)
+        print '### You can type you message now. Use "%s" to exit. ###\n###'   % (quit_command)
 
     def on_disconnect(self, connection, event):
+        print '### Exiting ###'
         sys.exit(0)
 
     def on_privmsg(self, connection, event):
-        print '### Received private message: %s' % event.arguments()
+        print '\n### Received private message: %s ###'  % event.arguments()###
 
     def readline(self):
-        line = sys.stdin.readline()
-        if line == quit_command :
-            self.connection.quit(quit_message)
-        else: 
-            self.connection.privmsg(self.target, line)
+        line = ''
+        try: line = sys.stdin.readline().rstrip('\n')
+        except: return
+
+        if line :
+            if line == quit_command :
+                print '### Received exit command. Cleaning up ... ###'
+                self.connection.quit(quit_message)
+            else:
+                print '### Sending private message: ==>%s<== ###' % line 
+                self.connection.privmsg(self.target, line)
+
+
+
+def make_stdin_non_blocking():
+    fd = sys.stdin.fileno()
+    fl = fcntl.fcntl(fd, fcntl.F_GETFL)
+    fcntl.fcntl(fd, fcntl.F_SETFL, fl | O_NONBLOCK)
 
 
 def main():
+
+    print '### Welcome to %s %s. This software is licenced under %s ###\n###' % (PROGRAM_NAME, PROGRAM_VERSION, PROGRAM_LICENCE) 
 
     parse_arguments()
     # print server, port, nick, target
 
     if irclib.is_channel(target):
-        print '### FATAL ERROR: I only do private messaging and cannot join channels!'
+        print '### FATAL ERROR: I only do private messaging and cannot join channels! ###'
         sys.exit(1)
+
+    make_stdin_non_blocking()
 
     ic = irc_client(target)
     try:
+        print '### Calling %s:%s ... ###' % (server, port)
         ic.connect(server, port, nick)
+        print '### Connected to %s:%s. Waiting to register nick "%s" ... ###' % (server, port, nick)
     except irclib.ServerConnectionError, IRCErrorMessage:
         print IRCErrorMessage
         sys.exit(1)
-  # ic.ircobj.process_forever()
+
     while True :
         ic.ircobj.process_once()
         if ic.logged_in : ic.readline()
