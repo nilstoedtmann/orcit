@@ -402,9 +402,9 @@ class ServerConnection(Connection):
 
             ipv6 -- Enable support for ipv6.
 
-            socksserver -- Use a SOCKS proxy for the TCP connection
+            socksserver -- Use a SOCKS proxy for the TCP connection.
 
-            socksport -- Port number of the SOCKS proxy
+            socksport -- Port number of the SOCKS proxy.
 
         This function can be called to reconnect a closed connection.
 
@@ -1059,7 +1059,7 @@ class SimpleIRCClient:
         self.dcc_connections.remove(c)
 
     def connect(self, server, port, nickname, password=None, username=None,
-                ircname=None, localaddress="", localport=0, ssl=False, ipv6=False):
+                ircname=None, localaddress="", localport=0, ssl=False, ipv6=False, socksserver=None, socksport=1080):
         """Connect/reconnect to a server.
 
         Arguments:
@@ -1084,11 +1084,15 @@ class SimpleIRCClient:
 
             ipv6 -- Enable support for ipv6.
 
+            socksserver -- Use a SOCKS proxy for the TCP connection.
+
+            socksport -- Port number of the SOCKS proxy.
+
         This function can be called to reconnect a closed connection.
         """
         self.connection.connect(server, port, nickname,
                                 password, username, ircname,
-                                localaddress, localport, ssl, ipv6)
+                                localaddress, localport, ssl, ipv6, socksserver, socksport)
 
     def dcc_connect(self, address, port, dcctype="chat"):
         """Connect to a DCC peer.
