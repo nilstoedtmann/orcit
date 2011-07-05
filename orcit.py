@@ -104,6 +104,12 @@ class irc_client(irclib.SimpleIRCClient):
                 print '### Sending private message: ==>%s<== ###' % line 
                 self.connection.privmsg(self.target, line)
 
+    def loop(self):
+        while True :
+            self.ircobj.process_once()
+            if self.logged_in : self.readline()
+            time.sleep(loop_sleeping_time)
+
 
 
 def make_stdin_non_blocking():
@@ -133,11 +139,7 @@ def main():
     except irclib.ServerConnectionError, IRCErrorMessage:
         print IRCErrorMessage
         sys.exit(1)
-
-    while True :
-        ic.ircobj.process_once()
-        if ic.logged_in : ic.readline()
-        time.sleep(loop_sleeping_time)
+    ic.loop()
 
 
 if __name__ == "__main__":
