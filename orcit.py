@@ -20,17 +20,49 @@
 
 
 import sys
-import irclib
 import time
+import argparse
+import random
+import string
+import irclib
 
-#server = 'chat.freenode.net'
-server = 'pratchett.freenode.net'
-port   = 6667
-nick   = 'akjwefkjaewhfb'
-target = 'aleumhxlaehfxl'
 
-quit_message = 'bye'
-quit_command = '/QUIT'
+DEFAULT_server = 'chat.freenode.net'
+DEFAULT_port   = 6667
+DEFAULT_target = 'orcittest'
+
+
+quit_command    = '/QUIT'
+quit_message    = 'bye'
+loop_sleeping_time = 1
+
+
+random_string_charset = string.ascii_uppercase + string.ascii_lowercase + string.digits
+random_string_length  = 10
+
+def random_string( N=random_string_length ):
+    return ''.join(random.sample(random_string_charset,N))
+
+
+def parse_arguments():
+    global server 
+    global port
+    global nick
+    global target
+
+    parser = argparse.ArgumentParser(description='Private messaging through IRC')
+    parser.add_argument('--irc-server',     type=str, help='IRC server name ["'+str(DEFAULT_server)+'"]')
+    parser.add_argument('--irc-port',       type=int, help='IRC server port ["'+str(DEFAULT_port)+'"]')
+    parser.add_argument('--nick',           type=str, help='IRC local  nick [random string]')
+    parser.add_argument('--target',         type=str, help='IRC remote nick [random string]')
+
+    namespace = parser.parse_args()
+    
+    server    = namespace.irc_server or DEFAULT_server
+    port      = namespace.irc_port   or DEFAULT_port  
+    nick      = namespace.nick       or random_string(6)
+    target    = namespace.target     or DEFAULT_target
+
 
 class irc_client(irclib.SimpleIRCClient):
 
@@ -41,7 +73,7 @@ class irc_client(irclib.SimpleIRCClient):
 
     def on_welcome(self, connection, event):
         self.logged_in = True
-        print '### I am listening. Press "%s" to leave ###' % quit_command
+        print '### I am listening. My nick is %s. Press "%s" to leave ###' % (nick, quit_command)
 
     def on_disconnect(self, connection, event):
         sys.exit(0)
@@ -59,6 +91,9 @@ class irc_client(irclib.SimpleIRCClient):
 
 def main():
 
+    parse_arguments()
+    # print server, port, nick, target
+
     if irclib.is_channel(target):
         print '### FATAL ERROR: I only do private messaging and cannot join channels!'
         sys.exit(1)
@@ -72,10 +107,8 @@ def main():
   # ic.ircobj.process_forever()
     while True :
         ic.ircobj.process_once()
-        print "Logged in? %s" % ic.logged_in
-        if ic.logged_in : 
-            ic.readline()
-        time.sleep(1)
+        if ic.logged_in : ic.readline()
+        time.sleep(loop_sleeping_time)
 
 
 if __name__ == "__main__":
