@@ -1,0 +1,48 @@
+######################################################################
+# Copyright notice
+
+Copyright (C) 2011  Nils Toedtmann  http://nils.toedtmann.net/
+See the end of the file for license conditions.
+
+
+######################################################################
+# Program description
+
+orcit is a meant to become a very simple command line IRC client 
+with support for OTR and TOR.
+
+
+######################################################################
+# A note from the author
+
+I hope this code is useful to you. It would be great if you wrote a
+short mail to <orcit-mail@nils.toedtmann.net> and briefly 
+tell me your experiences. If you like it, please consider a donation, 
+see http://nils.toedtmann.net/. Thank you, /nils.
+
+
+######################################################################
+# Program description
+
+One day in the future, you will find a description of orcit here.
+
+
+######################################################################
+# Licence
+
+This file is part of orcit.
+
+orcit is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or
+(at your option) any later version.
+
+orcit is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with orcit. If not, see 
+<http://www.gnu.org/licenses/gpl-2.0.html>
+######################################################################
