@@ -21,7 +21,7 @@
 
 import sys
 import irclib
-
+import time
 
 #server = 'chat.freenode.net'
 server = 'pratchett.freenode.net'
@@ -30,16 +30,18 @@ nick   = 'akjwefkjaewhfb'
 target = 'aleumhxlaehfxl'
 
 quit_message = 'bye'
-
+quit_command = '/QUIT'
 
 class irc_client(irclib.SimpleIRCClient):
 
     def __init__(self, target = None):
         irclib.SimpleIRCClient.__init__(self)
         self.target = target
+        self.logged_in = False
 
     def on_welcome(self, connection, event):
-        self.listen()
+        self.logged_in = True
+        print '### I am listening. Press "%s" to leave ###' % quit_command
 
     def on_disconnect(self, connection, event):
         sys.exit(0)
@@ -47,14 +49,12 @@ class irc_client(irclib.SimpleIRCClient):
     def on_privmsg(self, connection, event):
         print '### Received private message: %s' % event.arguments()
 
-    def listen(self):
-        print '### I am listening. Press <CTRL>-<D> to leave ###'
-        while True:
-            line = sys.stdin.readline()
-            if not line:
-                break
+    def readline(self):
+        line = sys.stdin.readline()
+        if line == quit_command :
+            self.connection.quit(quit_message)
+        else: 
             self.connection.privmsg(self.target, line)
-        self.connection.quit(quit_message)
 
 
 def main():
@@ -69,7 +69,13 @@ def main():
     except irclib.ServerConnectionError, IRCErrorMessage:
         print IRCErrorMessage
         sys.exit(1)
-    ic.start()
+  # ic.ircobj.process_forever()
+    while True :
+        ic.ircobj.process_once()
+        print "Logged in? %s" % ic.logged_in
+        if ic.logged_in : 
+            ic.readline()
+        time.sleep(1)
 
 
 if __name__ == "__main__":
