@@ -1,4 +1,5 @@
 # Copyright (C) 1999--2002  Joel Rosdahl
+# Copyright (C) 2011        Nils Toedtmann (SOCKS support)
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -13,10 +14,6 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
-#
-# keltus <keltus@users.sourceforge.net>
-#
-# $Id: irclib.py,v 1.47 2008/09/25 22:00:59 keltus Exp $
 
 """irclib -- Internet Relay Chat (IRC) protocol client library.
 
@@ -69,6 +66,7 @@ import string
 import sys
 import time
 import types
+import socks
 
 VERSION = 0, 4, 8
 DEBUG = 0
@@ -379,7 +377,7 @@ class ServerConnection(Connection):
         self.ssl = None
 
     def connect(self, server, port, nickname, password=None, username=None,
-                ircname=None, localaddress="", localport=0, ssl=False, ipv6=False):
+                ircname=None, localaddress="", localport=0, ssl=False, ipv6=False, socksserver=None, socksport=1080):
         """Connect/reconnect to a server.
 
         Arguments:
@@ -404,6 +402,10 @@ class ServerConnection(Connection):
 
             ipv6 -- Enable support for ipv6.
 
+            socksserver -- Use a SOCKS proxy for the TCP connection
+
+            socksport -- Port number of the SOCKS proxy
+
         This function can be called to reconnect a closed connection.
 
         Returns the ServerConnection object.
@@ -424,8 +426,13 @@ class ServerConnection(Connection):
         self.localaddress = localaddress
         self.localport = localport
         self.localhost = socket.gethostname()
+        self.socksserver = socksserver
+        self.socksport = socksport
         if ipv6:
             self.socket = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+        elif socksserver:
+            self.socket = socks.socksocket()
+            self.socket.setproxy(socks.PROXY_TYPE_SOCKS5, socksserver, socksport, True)
         else:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
