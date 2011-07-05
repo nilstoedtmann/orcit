@@ -95,7 +95,8 @@ class irc_client(irclib.SimpleIRCClient):
         sys.exit(0)
 
     def on_privmsg(self, connection, event):
-        print '\n### Received private message: %s'  % event.arguments()###
+        for message in event.arguments():
+            print '\n### Received private message: ==>%s<=='  % message
 
     def readline(self):
         line = ''
@@ -107,7 +108,7 @@ class irc_client(irclib.SimpleIRCClient):
                 print '### Received exit command. Cleaning up ...'
                 self.connection.quit(quit_message)
             else:
-                print '### Sending private message: ==>%s<==' % line 
+                print '### Sending  private message: ==>%s<==' % line 
                 self.connection.privmsg(self.target, line)
 
     def loop(self):
