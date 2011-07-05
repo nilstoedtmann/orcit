@@ -30,7 +30,7 @@ from   time     import sleep
 from   argparse import ArgumentParser
 from   random   import sample
 from   string   import ascii_uppercase, ascii_lowercase, digits 
-import irclib
+import irclib2
 from   fcntl    import fcntl, F_GETFL, F_SETFL
 from   os       import O_NONBLOCK
 
@@ -62,6 +62,8 @@ def parse_arguments():
     parser.add_argument('--irc-port',       type=int, help='IRC server port ["'+str(DEFAULT_port)+'"]')
     parser.add_argument('--nick',           type=str, help='IRC local  nick [random string]')
     parser.add_argument('--target',         type=str, help='IRC remote nick [random string]')
+    parser.add_argument('--echo',     action='store_true', help="Activate low level debug printing [Off]")
+    parser.add_argument('--without',  action='store_true', help="Activate low level debug printing [Off]")
 
     namespace = parser.parse_args()
     
@@ -71,10 +73,10 @@ def parse_arguments():
     target    = namespace.target     or DEFAULT_target
 
 
-class irc_client(irclib.SimpleIRCClient):
+class irc_client(irclib2.SimpleIRCClient):
 
     def __init__(self, input_handle = sys.stdin, remote_nick = None):
-        irclib.SimpleIRCClient.__init__(self)
+        irclib2.SimpleIRCClient.__init__(self)
         self.target = remote_nick
         self.logged_in = False
 
@@ -125,7 +127,7 @@ def main():
     parse_arguments()
     # print server, port, nick, target
 
-    if irclib.is_channel(target):
+    if irclib2.is_channel(target):
         print '### FATAL ERROR: I only do private messaging and cannot join channels!'
         sys.exit(1)
 
@@ -135,7 +137,7 @@ def main():
         ic.connect(server, port, nick)
         print 'connected' 
         print '### Registering nick "%s" ...' % (nick),
-    except irclib.ServerConnectionError, IRCErrorMessage:
+    except irclib2.ServerConnectionError, IRCErrorMessage:
         print IRCErrorMessage
         sys.exit(1)
     ic.loop()
