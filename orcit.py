@@ -34,7 +34,7 @@ import irclib2
 from   fcntl    import fcntl, F_GETFL, F_SETFL
 from   os       import O_NONBLOCK
 
-DEFAULT_server      = 'chat.freenode.net'
+DEFAULT_server      = 'irc.oftc.net'
 DEFAULT_port        = 6667
 DEFAULT_target      = 'orcittest'
 DEFAULT_socksserver = 'localhost'
@@ -98,7 +98,7 @@ class irc_client(irclib2.SimpleIRCClient):
         self.logged_in = True
         print 'registered'
         print '### Remote nick is  "%s". Remote side could use this command to speak to us: ' % (nick)
-        print '###        %s --nick %s  --target %s \n###' % (PROGRAM_NAME, target, nick)
+        print '###        %s --nick %s  --target %s  [--without-socks]\n###' % (PROGRAM_NAME, target, nick)
         print '### You can type you message now. Use "%s" to exit.\n'   % (quit_command)
 
     def on_disconnect(self, connection, event):
