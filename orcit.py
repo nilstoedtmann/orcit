@@ -34,14 +34,15 @@ import irclib2
 from   fcntl    import fcntl, F_GETFL, F_SETFL
 from   os       import O_NONBLOCK
 
-DEFAULT_server = 'chat.freenode.net'
-DEFAULT_port   = 6667
-DEFAULT_target = 'orcittest'
+DEFAULT_server      = 'chat.freenode.net'
+DEFAULT_port        = 6667
+DEFAULT_target      = 'orcittest'
+DEFAULT_socksserver = 'localhost'
+DEFAULT_socksport   = 9050   # SOCKS5 port of tor
 
-
-quit_command    = 'QUIT'
-quit_message    = 'bye'
-loop_sleeping_time = 1
+quit_command        = 'QUIT'
+quit_message        = 'bye'
+loop_sleeping_time  = 1
 
 
 random_string_charset = ascii_uppercase + ascii_lowercase + digits
@@ -56,21 +57,29 @@ def parse_arguments():
     global port
     global nick
     global target
+    global socksserver
+    global socksport
 
     parser = ArgumentParser(description='Private messaging through IRC')
     parser.add_argument('--irc-server',     type=str, help='IRC server name ["'+str(DEFAULT_server)+'"]')
     parser.add_argument('--irc-port',       type=int, help='IRC server port ["'+str(DEFAULT_port)+'"]')
     parser.add_argument('--nick',           type=str, help='IRC local  nick [random string]')
     parser.add_argument('--target',         type=str, help='IRC remote nick [random string]')
-    parser.add_argument('--echo',     action='store_true', help="Activate low level debug printing [Off]")
-    parser.add_argument('--without',  action='store_true', help="Activate low level debug printing [Off]")
+    parser.add_argument('--socks-server',   type=str, help='SOCKS5 server ["'+str(DEFAULT_socksserver)+'"]')
+    parser.add_argument('--socks-port',     type=int, help='SOCKS5 server ["'+str(DEFAULT_socksport)+'"]')
+    parser.add_argument('--without-socks',  action='store_true', help="equivalent to \"--socks-server None\"")
+   #parser.add_argument('--echo',     action='store_true', help="Activate low level debug printing [Off]")
 
     namespace = parser.parse_args()
     
-    server    = namespace.irc_server or DEFAULT_server
-    port      = namespace.irc_port   or DEFAULT_port  
-    nick      = namespace.nick       or random_string(6)
-    target    = namespace.target     or DEFAULT_target
+    server      = namespace.irc_server   or DEFAULT_server
+    port        = namespace.irc_port     or DEFAULT_port  
+    nick        = namespace.nick         or random_string(6)
+    target      = namespace.target       or DEFAULT_target
+    socksserver = namespace.socks_server or DEFAULT_socksserver
+    socksport   = namespace.socks_port   or DEFAULT_socksport 
+
+    if socksserver.upper() == 'NONE' or namespace.without_socks : socksserver = None
 
 
 class irc_client(irclib2.SimpleIRCClient):
@@ -133,8 +142,11 @@ def main():
 
     ic = irc_client(input_handle = sys.stdin, remote_nick = target)
     try:
-        print '### Connecting to %s:%s ...' % (server, port),
-        ic.connect(server, port, nick)
+        if socksserver :
+            print '### Connecting to %s:%s via SOCKS5 proxy %s:%s ...' % (server, port, socksserver, socksport),
+        else:    
+            print '### Connecting to %s:%s ...' % (server, port),
+        ic.connect(server, port, nick, socksserver=socksserver, socksport=socksport)
         print 'connected' 
         print '### Registering nick "%s" ...' % (nick),
     except irclib2.ServerConnectionError, IRCErrorMessage:
