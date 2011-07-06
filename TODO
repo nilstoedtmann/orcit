@@ -1,0 +1,12 @@
+TODO:
+ * Add support for OTR (http://python-otr.pentabarf.de/)
+ * Split orcit.py into a modul providing a stream or socket, and an example client using STDIN/OUT
+ * Handle IRC exceptions, e.g. nick collisions
+ * Use source nick of first incoming private message as "target"
+ * Use a logging module for status messages
+ * Client: write log/status messages to STDERR
+ * Have a queue of messages which could not yet been sent because we are not yet logged in or do not know the target yet
+ * irclib2.py: handle the case of IPv6 + SOCKS properly
+ * irclib2.py: file SOCKS support patch at http://python-irclib.sourceforge.net/
+ * Instead of patching irclib, monkey-patch socket.socket()
+ * Documentation
